@@ -125,6 +125,7 @@ public class ImportIconActivity extends BaseAppCompatActivity implements IconAda
         setContentView(binding.getRoot());
 
         colorpicker = new ColorPickerDialog(this, 0xFF9E9E9E, false, false);
+
         svgUtils = new SvgUtils(this);
         Toolbar toolbar = binding.toolbar.toolbar;
         binding.toolbar.layoutMainLogo.setVisibility(View.GONE);

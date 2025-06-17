@@ -81,6 +81,7 @@ public class ImportIconActivity extends BaseAppCompatActivity implements IconAda
             }
         }
     };
+
     private IconAdapter adapter = null;
     private ArrayList<String> alreadyAddedImageNames;
     private SvgUtils svgUtils;

@@ -25,6 +25,10 @@ const val SIZE_MULTIPLIER = 1
 class SvgUtils(private val context: Context) {
     private var imageLoader: ImageLoader? = null
 
+    private fun dpToPx(dp: Int): Int {
+        return (dp * context.resources.displayMetrics.density).toInt()
+    }
+
     init {
         initImageLoader()
     }
@@ -66,34 +70,22 @@ class SvgUtils(private val context: Context) {
     fun loadScaledSvgIntoImageView(
         imageView: ImageView,
         svgPath: String,
-        scaleFactor: Float = 0.5f // Default scaling factor if none is provided
+        scaleFactor: Float = 0.5f // চাইলে 0.5f, 1f, 1.5f করা যাবে
     ) {
-        // Create an ImageLoader with SVG support
         val imageLoader = ImageLoader.Builder(context)
             .components {
                 add(SvgDecoder.Factory())
             }
             .build()
 
-        // Load the SVG image and apply scaling
         val request = ImageRequest.Builder(context)
             .data(svgPath)
+            .size(
+                (24 * scaleFactor * context.resources.displayMetrics.density).toInt(),
+                (24 * scaleFactor * context.resources.displayMetrics.density).toInt()
+            )
             .target { drawable ->
-                drawable.let {
-                    // Get density scaling
-                    val densityScale =
-                        (context.resources.displayMetrics.density * scaleFactor).roundToInt()
-                    val bitmap = drawable.toBitmap()
-                    // Apply scaling to width and height
-                    val scaledBitmap = Bitmap.createScaledBitmap(
-                        bitmap,
-                        24 * densityScale,
-                        24 * densityScale,
-                        true
-                    )
-                    // Set the scaled image on the ImageView
-                    imageView.setImageBitmap(scaledBitmap)
-                }
+                imageView.setImageDrawable(drawable)
             }
             .build()
 
@@ -270,8 +262,8 @@ class SvgUtils(private val context: Context) {
         // Write vector tag
         serializer.startTag(null, "vector")
         serializer.attribute(null, "xmlns:android", "http://schemas.android.com/apk/res/android")
-        serializer.attribute(null, "android:width", "${attributes.width * SIZE_MULTIPLIER}dp")
-        serializer.attribute(null, "android:height", "${attributes.height * SIZE_MULTIPLIER}dp")
+        serializer.attribute(null, "android:width", "${attributes.width}dp")
+        serializer.attribute(null, "android:height", "${attributes.height}dp")
         serializer.attribute(null, "android:viewportWidth", attributes.viewportWidth.toString())
         serializer.attribute(null, "android:viewportHeight", attributes.viewportHeight.toString())
 

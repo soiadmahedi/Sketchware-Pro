@@ -188,7 +188,14 @@ public class yq {
 
     public jq N;
     public boolean generateDataBindingClasses;
-    public boolean exportingProject;
+    public boolean isAndroidStudioExport;
+
+    public enum ExportType {
+        AAB,
+        DEBUG_APP,
+        SIGN_APP,
+        SOURCE_CODE
+    }
 
     public yq(Context context, String sc_id) {
         this(context, wq.d(sc_id), lC.b(sc_id));
@@ -393,7 +400,7 @@ public class yq {
             }
             if (new Material3LibraryManager(sc_id).isDynamicColorsEnabled()) {
                 sketchApplicationFileContent = sketchApplicationFileContent.replace(
-                        "mApplicationContext = getApplicationContext();", "mApplicationContext = getApplicationContext();\n" +
+                                "mApplicationContext = getApplicationContext();", "mApplicationContext = getApplicationContext();\n" +
                                         "        DynamicColors.applyToActivitiesIfAvailable(this);")
                         .replace("import android.util.Log;", "import android.util.Log;\nimport com.google.android.material.color.DynamicColors;");
             }
@@ -447,7 +454,11 @@ public class yq {
     /**
      * Initialize project metadata
      */
-    public void a(iC projectLibraryManager, hC projectFileManager, eC projectDataManager, boolean exportingProject) {
+    public void a(iC projectLibraryManager, hC projectFileManager, eC projectDataManager) {
+        a(projectLibraryManager, projectFileManager, projectDataManager, ExportType.DEBUG_APP);
+    }
+
+    public void a(iC projectLibraryManager, hC projectFileManager, eC projectDataManager, ExportType exportingType) {
         ProjectLibraryBean adMob = projectLibraryManager.b();
         ProjectLibraryBean appCompat = projectLibraryManager.c();
         ProjectLibraryBean firebase = projectLibraryManager.d();
@@ -458,8 +469,9 @@ public class yq {
         N.versionCode = versionCode;
         N.versionName = versionName;
         N.sc_id = sc_id;
-        N.isDebugBuild = !exportingProject;
-        this.exportingProject = exportingProject;
+        N.isDebugBuild = exportingType == ExportType.DEBUG_APP;
+        isAndroidStudioExport = exportingType == ExportType.SOURCE_CODE;
+        generateDataBindingClasses = !(exportingType == ExportType.DEBUG_APP || exportingType == ExportType.SOURCE_CODE);
         if (firebase.useYn.equals(ProjectLibraryBean.LIB_USE_Y)) {
             N.isFirebaseEnabled = true;
             N.addPermission(jq.PERMISSION_INTERNET);
@@ -747,7 +759,7 @@ public class yq {
         for (ProjectFileBean activity : projectFileManager.b()) {
             if (!javaFiles.contains(new File(javaDir + activity.getJavaName()))) {
                 srcCodeBeans.add(new SrcCodeBean(activity.getJavaName(),
-                        new Jx(N, activity, projectDataManager).generateCode(exportingProject)));
+                        new Jx(N, activity, projectDataManager).generateCode(isAndroidStudioExport, sc_id)));
             }
         }
 
@@ -862,7 +874,7 @@ public class yq {
      * @return The file's code or an empty String if not found
      */
     public String getFileSrc(String filename, hC projectFileManager, eC projectDataManager, iC projectLibraryManager) {
-        a(projectLibraryManager, projectFileManager, projectDataManager, false);
+        a(projectLibraryManager, projectFileManager, projectDataManager);
         CommandBlock.x();
         boolean isJavaFile = filename.endsWith(".java");
         boolean isXmlFile = filename.endsWith(".xml");
@@ -879,7 +891,7 @@ public class yq {
                  Generating every java file is necessary to make command blocks for xml work
                  */
                 for (ProjectFileBean file : files) {
-                    CommandBlock.CBForXml(new Jx(N, file, projectDataManager).generateCode(exportingProject));
+                    CommandBlock.CBForXml(new Jx(N, file, projectDataManager).generateCode(isAndroidStudioExport, sc_id));
                 }
             }
         }
@@ -907,7 +919,7 @@ public class yq {
         for (ProjectFileBean file : files) {
             if (filename.equals(isJavaFile ? file.getJavaName() : file.getXmlName())) {
                 if (isJavaFile) {
-                    return new Jx(N, file, projectDataManager).generateCode(exportingProject);
+                    return new Jx(N, file, projectDataManager).generateCode(isAndroidStudioExport, sc_id);
                 } else if (isXmlFile) {
                     Ox xmlGenerator = new Ox(N, file);
                     xmlGenerator.a(eC.a(projectDataManager.d(filename)), projectDataManager.h(filename));
